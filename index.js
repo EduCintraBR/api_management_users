@@ -18,6 +18,6 @@ app.use(bodyParser.json())
 
 app.use("/",router);
 
-app.listen(8686,() => {
+app.listen(process.env.PORT,() => {
     console.log("Servidor rodando")
 });
