@@ -1,7 +1,43 @@
 var User = require("../models/User");
 var PasswordToken = require("../models/PasswordToken");
+var jwt = require("jsonwebtoken");
+var bcrypt = require("bcrypt");
+require("dotenv").config();
 
 class UserController {
+
+    async login(req, res){
+        var { email, password } = req.body;
+
+        var user = await User.findByEmail(email);
+        if (user != undefined){
+            var passwordCorrect = await bcrypt.compare(password, user.password);
+
+            if(passwordCorrect){
+                var token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET);
+
+                req.session.user = {
+                    email: user.email,
+                    role: user.role,
+                    token: token
+                };
+
+                res.status(200);
+                res.json({ status: true, token: token});
+            } else {
+                res.status(400);
+                res.json({ status: false, error: "Password or email invalid!"});
+            }
+        } else {
+            res.status(400);
+            res.json({ status: false, error: "Password or email invalid!"});
+        }
+    }
+
+    async logout(req, res){
+        req.session.user = undefined;
+        res.send("Logout made successfully!");
+    }
 
     async index(req, res){
         res.send("Bem vindo a rota de usuarios")
